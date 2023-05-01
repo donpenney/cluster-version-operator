@@ -24,7 +24,8 @@ func ApplyClusterVersionFromCache(ctx context.Context, lister configlistersv1.Cl
 		return nil, false, err
 	}
 	// if we only create this resource, we have no need to continue further
-	if IsCreateOnly(required) {
+	// Also skip if inject-cabundle is set, as it means the resource gets updated by service-ca
+	if IsCreateOnly(required) || IsInjectCaBundle(required) {
 		return nil, false, nil
 	}
 

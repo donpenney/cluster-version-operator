@@ -16,3 +16,13 @@ const CreateOnlyAnnotation = "release.openshift.io/create-only"
 func IsCreateOnly(metadata metav1.Object) bool {
 	return strings.EqualFold(metadata.GetAnnotations()[CreateOnlyAnnotation], "true")
 }
+
+// InjectCaBundleAnnotation means that this resource gets updated by service-ca to inject the CA Bundle,
+// so it should not get updated.
+// Set .metadata.annotations["service.beta.openshift.io/inject-cabundle"]="true" to have a create-only resource.
+const InjectCaBundleAnnotation = "service.beta.openshift.io/inject-cabundle"
+
+// IsCreateOnly takes metadata and returns true if the resource should only be created, not updated.
+func IsInjectCaBundle(metadata metav1.Object) bool {
+	return strings.EqualFold(metadata.GetAnnotations()[InjectCaBundleAnnotation], "true")
+}
