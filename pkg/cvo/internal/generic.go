@@ -72,7 +72,8 @@ func applyUnstructured(ctx context.Context, client dynamic.ResourceInterface, re
 		return nil, false, err
 	}
 	// if we only create this resource, we have no need to continue further
-	if resourceapply.IsCreateOnly(required) {
+	// Also skip if inject-cabundle is set, as it means the resource gets updated by service-ca
+	if resourceapply.IsCreateOnly(required) || resourceapply.IsInjectCaBundle(required) {
 		return nil, false, nil
 	}
 

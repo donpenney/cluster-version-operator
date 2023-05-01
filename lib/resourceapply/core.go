@@ -28,7 +28,8 @@ func ApplyNamespacev1(ctx context.Context, client coreclientv1.NamespacesGetter,
 		return nil, false, err
 	}
 	// if we only create this resource, we have no need to continue further
-	if IsCreateOnly(required) {
+	// Also skip if inject-cabundle is set, as it means the resource gets updated by service-ca
+	if IsCreateOnly(required) || IsInjectCaBundle(required) {
 		return nil, false, nil
 	}
 
@@ -59,7 +60,8 @@ func ApplyServicev1(ctx context.Context, client coreclientv1.ServicesGetter, req
 		return nil, false, err
 	}
 	// if we only create this resource, we have no need to continue further
-	if IsCreateOnly(required) {
+	// Also skip if inject-cabundle is set, as it means the resource gets updated by service-ca
+	if IsCreateOnly(required) || IsInjectCaBundle(required) {
 		return nil, false, nil
 	}
 
@@ -94,7 +96,8 @@ func ApplyServiceAccountv1(ctx context.Context, client coreclientv1.ServiceAccou
 		return nil, false, err
 	}
 	// if we only create this resource, we have no need to continue further
-	if IsCreateOnly(required) {
+	// Also skip if inject-cabundle is set, as it means the resource gets updated by service-ca
+	if IsCreateOnly(required) || IsInjectCaBundle(required) {
 		return nil, false, nil
 	}
 
@@ -124,7 +127,8 @@ func ApplyConfigMapv1(ctx context.Context, client coreclientv1.ConfigMapsGetter,
 		return nil, false, err
 	}
 	// if we only create this resource, we have no need to continue further
-	if IsCreateOnly(required) {
+	// Also skip if inject-cabundle is set, as it means the resource gets updated by service-ca
+	if IsCreateOnly(required) || IsInjectCaBundle(required) {
 		return nil, false, nil
 	}
 
