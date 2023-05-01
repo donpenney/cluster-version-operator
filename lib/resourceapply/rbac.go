@@ -25,7 +25,8 @@ func ApplyClusterRoleBindingv1(ctx context.Context, client rbacclientv1.ClusterR
 		return nil, false, err
 	}
 	// if we only create this resource, we have no need to continue further
-	if IsCreateOnly(required) {
+	// Also skip if inject-cabundle is set, as it means the resource gets updated by service-ca
+	if IsCreateOnly(required) || IsInjectCaBundle(required) {
 		return nil, false, nil
 	}
 
@@ -54,7 +55,8 @@ func ApplyClusterRolev1(ctx context.Context, client rbacclientv1.ClusterRolesGet
 		return nil, false, err
 	}
 	// if we only create this resource, we have no need to continue further
-	if IsCreateOnly(required) {
+	// Also skip if inject-cabundle is set, as it means the resource gets updated by service-ca
+	if IsCreateOnly(required) || IsInjectCaBundle(required) {
 		return nil, false, nil
 	}
 
@@ -83,7 +85,8 @@ func ApplyRoleBindingv1(ctx context.Context, client rbacclientv1.RoleBindingsGet
 		return nil, false, err
 	}
 	// if we only create this resource, we have no need to continue further
-	if IsCreateOnly(required) {
+	// Also skip if inject-cabundle is set, as it means the resource gets updated by service-ca
+	if IsCreateOnly(required) || IsInjectCaBundle(required) {
 		return nil, false, nil
 	}
 
@@ -112,7 +115,8 @@ func ApplyRolev1(ctx context.Context, client rbacclientv1.RolesGetter, required 
 		return nil, false, err
 	}
 	// if we only create this resource, we have no need to continue further
-	if IsCreateOnly(required) {
+	// Also skip if inject-cabundle is set, as it means the resource gets updated by service-ca
+	if IsCreateOnly(required) || IsInjectCaBundle(required) {
 		return nil, false, nil
 	}
 
