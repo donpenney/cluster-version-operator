@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -44,8 +45,11 @@ import (
 const (
 	defaultComponentName      = "version"
 	defaultComponentNamespace = "openshift-cluster-version"
+)
 
+var (
 	minResyncPeriod = 2 * time.Minute
+	intervalRand    = true // DPENNEY: Randomize interval
 )
 
 // Options are the valid inputs to starting the CVO.
@@ -172,6 +176,31 @@ func (o *Options) Run(ctx context.Context) error {
 		return err
 	}
 
+	// DPENNEY
+	poc1core, err := cb.KubeClientOrDie("poc-1core").CoreV1().ConfigMaps(internal.ConfigNamespace).Get(ctx, "poc-1core", metav1.GetOptions{})
+	if err == nil {
+		klog.Infof("DPENNEY: poc-1core data: %v", poc1core.Data)
+		if poc1core.Data["intervalRand"] == "false" {
+			klog.Infof("DPENNEY: Setting intervalRand to false")
+			intervalRand = false
+		} else {
+			klog.Infof("DPENNEY: Skipping setting intervalRand: %s", poc1core.Data["intervalRand"])
+		}
+		if poc1core.Data["intervalMin"] != "" {
+			intervalMin, err := strconv.Atoi(poc1core.Data["intervalMin"])
+			if err != nil {
+				klog.Infof("Failed to convert intervalMin: %s", poc1core.Data["intervalMin"])
+			} else {
+				klog.Infof("DPENNEY: Setting intervalMin to %s", poc1core.Data["intervalMin"])
+				o.ResyncInterval = time.Duration(intervalMin) * time.Minute
+				minResyncPeriod = time.Duration(intervalMin) * time.Minute
+			}
+		} else {
+			klog.Infof("DPENNEY: Skipping setting intervalMin: %s", poc1core.Data["intervalMin"])
+		}
+	} else {
+		klog.Infof("DPENNEY: failed to get configmap: %v", err)
+	}
 	// initialize the controllers and attempt to load the payload information
 	controllerCtx := o.NewControllerContext(cb, startingFeatureSet)
 	o.leaderElection = getLeaderElectionConfig(ctx, cb.RestConfig(defaultQPS))
@@ -355,9 +384,18 @@ func createResourceLock(cb *ClientBuilder, namespace, name string) (resourcelock
 }
 
 func resyncPeriod(minResyncPeriod time.Duration) func() time.Duration {
-	return func() time.Duration {
-		factor := rand.Float64() + 1
-		return time.Duration(float64(minResyncPeriod.Nanoseconds()) * factor)
+	if intervalRand {
+		return func() time.Duration {
+			factor := rand.Float64() + 1
+			klog.Infof("DPENNEY: resyncPeriod: %d * %f = %f", minResyncPeriod, factor, float64(minResyncPeriod.Nanoseconds())*factor)
+			return time.Duration(float64(minResyncPeriod.Nanoseconds()) * factor)
+		}
+	} else {
+		// DPENNEY: Remove rand for testing
+		return func() time.Duration {
+			klog.Infof("DPENNEY: resyncPeriod: %d", minResyncPeriod)
+			return minResyncPeriod
+		}
 	}
 }
 
