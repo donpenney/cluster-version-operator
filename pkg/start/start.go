@@ -5,8 +5,7 @@ package start
 import (
 	"context"
 	"fmt"
-
-	// "math/rand"
+	"math/rand"
 	"os"
 	"os/signal"
 	"syscall"
@@ -46,7 +45,7 @@ const (
 	defaultComponentName      = "version"
 	defaultComponentNamespace = "openshift-cluster-version"
 
-	minResyncPeriod = 3 * time.Minute // DPENNEY: Updating to 3 minutes to account for removal of rand factor
+	minResyncPeriod = 2 * time.Minute
 )
 
 // Options are the valid inputs to starting the CVO.
@@ -356,15 +355,10 @@ func createResourceLock(cb *ClientBuilder, namespace, name string) (resourcelock
 }
 
 func resyncPeriod(minResyncPeriod time.Duration) func() time.Duration {
-	// DPENNEY: Remove rand for testing
 	return func() time.Duration {
-		return minResyncPeriod
+		factor := rand.Float64() + 1
+		return time.Duration(float64(minResyncPeriod.Nanoseconds()) * factor)
 	}
-
-	// return func() time.Duration {
-	// 	factor := rand.Float64() + 1
-	// 	return time.Duration(float64(minResyncPeriod.Nanoseconds()) * factor)
-	// }
 }
 
 // ClientBuilder simplifies returning Kubernetes client and client configs with
